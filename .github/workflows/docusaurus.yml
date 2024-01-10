@@ -1,0 +1,56 @@
+---
+  name: deploy Docusaurus on Github Page
+  on:
+    workflow_dispatch:
+    push:
+  jobs:
+    build-ci:
+      runs-on: ubuntu-latest
+      steps:
+      
+      - name: checkout our code
+        uses: actions/checkout@v4
+      
+      - name: install node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: build docusaurus
+        run: | 
+          npm install
+          npm run build
+  
+      - name: upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docusaurus
+          path: build/
+  
+    deploy-cd:
+      needs: build-ci
+      permissions:
+        pages: write
+        id-token: write
+      environment:
+        name: github-pages
+        url: ${{ steps.deployment.outputs.page_url }}
+        
+      runs-on: ubuntu-latest
+      steps:
+  
+      - name: download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docusaurus
+  
+      - name: upload artifact github pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      
+      - name: deployment
+        id: deployment
+        uses: actions/deploy-pages@v4
+  
+          
